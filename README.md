@@ -10,7 +10,7 @@ A powerful cross-platform serial port monitor with interactive TUI interface, au
 
 > **🎉 Now Published on npm!** Install globally with `npm install -g serialconsole`
 
-![SerialConsole Demo](https://raw.githubusercontent.com/Sigmakib2/serialconsole/main/demo.gif)
+![SerialConsole Demo](https://raw.githubusercontent.com/Sigmakib2/serialconsole/refs/heads/main/image.png)
 
 ## ✨ Features
 
