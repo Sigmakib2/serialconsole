@@ -5,21 +5,19 @@
   "main": "index.js",
   "type": "module",
   "bin": {
-    "serialconsole": "./index.js",
-    "sc": "./index.js"
+    "serialconsole": "index.js",
+    "sc": "index.js"
   },
   "scripts": {
     "start": "node index.js",
     "build": "pkg . --compress GZip",
     "build:all": "pkg . --targets node18-win-x64,node18-macos-x64,node18-macos-arm64,node18-linux-x64,node18-linux-arm64 --compress GZip",
-    "test": "node index.js list",
-    "prepare": "npm run build:all",
-    "release": "npm run build:all && npm publish"
+    "test": "node index.js list"
   },
   "pkg": {
     "targets": [
       "node18-win-x64",
-      "node18-macos-x64", 
+      "node18-macos-x64",
       "node18-macos-arm64",
       "node18-linux-x64",
       "node18-linux-arm64"
@@ -46,7 +44,10 @@
     "dashboard",
     "rs232",
     "com-port",
-    "serial-communication"
+    "serial-communication",
+    "iot",
+    "hardware",
+    "interactive"
   ],
   "author": {
     "name": "Sigmakib2",
@@ -56,7 +57,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Sigmakib2/serialconsole.git"
+    "url": "git+https://github.com/Sigmakib2/serialconsole.git"
   },
   "bugs": {
     "url": "https://github.com/Sigmakib2/serialconsole/issues"
@@ -67,7 +68,7 @@
   },
   "os": [
     "win32",
-    "darwin", 
+    "darwin",
     "linux"
   ],
   "cpu": [
