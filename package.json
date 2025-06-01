@@ -1,7 +1,7 @@
 {
   "name": "serialconsole",
   "version": "1.0.0",
-  "description": "Professional cross-platform serial port monitor with nano-style TUI interface",
+  "description": "Cross-platform serial port monitor and console with TUI interface, auto-reconnect, and hex viewer. Ideal for embedded systems debugging.",
   "main": "index.js",
   "type": "module",
   "bin": {

@@ -5,6 +5,7 @@ import { ReadlineParser } from '@serialport/parser-readline';
 import chalk from 'chalk';
 import { Command } from 'commander';
 import blessed from 'blessed';
+import readline from 'readline';
 
 // Command: Responsive TUI Monitor with adaptive layout
 async function tuiMonitor(portPath, options) {
@@ -663,7 +664,22 @@ function formatPortInfo(port) {
   return info.join(' ');
 }
 
-// Command: List available serial ports
+// Helper function to prompt user input
+function askQuestion(question) {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve(answer.trim());
+    });
+  });
+}
+
+// Enhanced Command: List available serial ports with interactive selection
 async function listPorts() {
   try {
     console.log(chalk.blue('📋 Scanning for serial ports...\n'));
@@ -680,6 +696,96 @@ async function listPorts() {
     ports.forEach((port, index) => {
       console.log(`${chalk.white(`${index + 1}.`)} ${formatPortInfo(port)}`);
     });
+    
+    console.log();
+    
+    // Interactive port selection
+    while (true) {
+      const selection = await askQuestion(
+        chalk.cyan('🔗 Select a port to monitor (1-' + ports.length + '), or press Enter to exit: ')
+      );
+      
+      // Allow exit with empty input
+      if (!selection) {
+        console.log(chalk.gray('👋 Goodbye!'));
+        return;
+      }
+      
+      const portIndex = parseInt(selection) - 1;
+      
+      if (isNaN(portIndex) || portIndex < 0 || portIndex >= ports.length) {
+        console.log(chalk.red('❌ Invalid selection. Please enter a number between 1 and ' + ports.length));
+        continue;
+      }
+      
+      const selectedPort = ports[portIndex];
+      console.log(chalk.green(`✅ Selected: ${formatPortInfo(selectedPort)}\n`));
+      
+      // Baud rate selection
+      const commonBaudRates = [
+        '9600', '19200', '38400', '57600', '115200', '230400', '460800', '921600'
+      ];
+      
+      console.log(chalk.blue('⚡ Common baud rates:'));
+      commonBaudRates.forEach((rate, index) => {
+        const marker = rate === '9600' ? chalk.green(' (default)') : '';
+        console.log(`  ${index + 1}. ${rate}${marker}`);
+      });
+      console.log(`  ${commonBaudRates.length + 1}. Custom rate`);
+      console.log();
+      
+      let baudRate = '9600'; // default
+      
+      while (true) {
+        const baudSelection = await askQuestion(
+          chalk.cyan('⚡ Select baud rate (1-' + (commonBaudRates.length + 1) + '), or press Enter for 9600: ')
+        );
+        
+        if (!baudSelection) {
+          // Use default 9600
+          break;
+        }
+        
+        const baudIndex = parseInt(baudSelection) - 1;
+        
+        if (baudIndex >= 0 && baudIndex < commonBaudRates.length) {
+          baudRate = commonBaudRates[baudIndex];
+          break;
+        } else if (baudIndex === commonBaudRates.length) {
+          // Custom rate
+          while (true) {
+            const customRate = await askQuestion(chalk.cyan('⚡ Enter custom baud rate: '));
+            const rate = parseInt(customRate);
+            
+            if (isNaN(rate) || rate <= 0) {
+              console.log(chalk.red('❌ Invalid baud rate. Please enter a positive number.'));
+              continue;
+            }
+            
+            baudRate = customRate;
+            break;
+          }
+          break;
+        } else {
+          console.log(chalk.red('❌ Invalid selection. Please enter a number between 1 and ' + (commonBaudRates.length + 1)));
+          continue;
+        }
+      }
+      
+      console.log(chalk.green(`✅ Baud rate: ${baudRate}\n`));
+      console.log(chalk.blue('🚀 Starting TUI monitor...\n'));
+      
+      // Launch the TUI monitor
+      try {
+        await tuiMonitor(selectedPort.path, { baud: baudRate });
+      } catch (error) {
+        console.error(chalk.red('❌ Failed to start monitor:'), error.message);
+        console.log(chalk.yellow('🔄 Returning to port selection...\n'));
+        continue;
+      }
+      
+      break;
+    }
     
   } catch (error) {
     console.error(chalk.red('❌ Error listing ports:'), error.message);
@@ -804,11 +910,11 @@ program
   .description('Tiny cross-platform serial port console')
   .version('1.0.0');
 
-// List command
+// Enhanced List command with interactive selection
 program
   .command('list')
   .alias('ls')
-  .description('List available serial ports')
+  .description('List available serial ports and interactively select one to monitor')
   .action(listPorts);
 
 // Read command
