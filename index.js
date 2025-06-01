@@ -20,10 +20,6 @@ async function tuiMonitor(portPath, options) {
   let showHex = true;
   let showStats = true;
   let pauseLogging = false;
-  let lineEnding = 'LF';
-  let echoMode = false;
-  let filterText = '';
-  let filterEnabled = false;
   let autoReconnect = true;
   
   // Reconnection state
@@ -230,8 +226,8 @@ async function tuiMonitor(portPath, options) {
         width: '100%',
         height: 1,
         content: compactMode ?
-          '{white-fg}{black-bg} F{/} Filter {white-fg}{black-bg} E{/} Echo  {white-fg}{black-bg} L{/} Line  {white-fg}{black-bg} R{/} Reconnect {white-fg}{black-bg} ?{/} Help  {/}' :
-          '{white-fg}{black-bg} F{/} Filter     {white-fg}{black-bg} E{/} Echo Mode  {white-fg}{black-bg} L{/} Line End   {white-fg}{black-bg} R{/} Auto-Reconnect {white-fg}{black-bg} ?{/} Help  {/}',
+          '{white-fg}{black-bg} R{/} Reconnect {white-fg}{black-bg} ?{/} Help  {/}' :
+          '{white-fg}{black-bg} R{/} Auto-Reconnect {white-fg}{black-bg} ?{/} Help  {/}',
         tags: true,
         style: {
           fg: 'white',
@@ -274,12 +270,6 @@ async function tuiMonitor(portPath, options) {
       
       if (pauseLogging && !isSystemMessage) {
         return; // Skip regular messages when paused
-      }
-      
-      // Apply filter if enabled (only for non-system messages)
-      if (!isSystemMessage && filterEnabled && filterText && 
-          !String(message || '').toLowerCase().includes(filterText.toLowerCase())) {
-        return;
       }
       
       // Create responsive timestamp
@@ -378,7 +368,7 @@ async function tuiMonitor(portPath, options) {
 
 {white-fg}📥 RX:{/} {bold}{green-fg}${bytesReceived.toLocaleString()}{/}{/} {white-fg}bytes ({/}{bold}{green-fg}${rxRate}{/}{/} {white-fg}B/s) | 📤 TX:{/} {bold}{blue-fg}${bytesSent.toLocaleString()}{/}{/} {white-fg}bytes ({/}{bold}{blue-fg}${txRate}{/}{/} {white-fg}B/s) | 📊 Messages:{/} {bold}{cyan-fg}${messagesReceived.toLocaleString()}{/}{/}
 
-{white-fg}📝 Log:{/} ${pauseLogging ? '{red-fg}⏸️ PAUSED{/}' : '{green-fg}▶️ ACTIVE{/}'} | {white-fg}🔍 Hex:{/} ${showHex ? '{green-fg}👁️ ON{/}' : '{gray-fg}👁️ OFF{/}'} | {white-fg}🔊 Echo:{/} ${echoMode ? '{green-fg}🔊 ON{/}' : '{gray-fg}🔇 OFF{/}'} | {white-fg}📏 Line:{/} {bold}{cyan-fg}${lineEnding}{/}{/} | {white-fg}🎯 Filter:{/} ${filterEnabled ? `{yellow-fg}🎯 "${filterText}"{/}` : '{gray-fg}🚫 OFF{/}'} | {white-fg}🔄 Auto-reconnect:{/} ${autoReconnect ? '{green-fg}✅ ON{/}' : '{red-fg}❌ OFF{/}'}`;
+{white-fg}📝 Log:{/} ${pauseLogging ? '{red-fg}⏸️ PAUSED{/}' : '{green-fg}▶️ ACTIVE{/}'} | {white-fg}🔍 Hex:{/} ${showHex ? '{green-fg}👁️ ON{/}' : '{gray-fg}👁️ OFF{/}'} | {white-fg}🔄 Auto-reconnect:{/} ${autoReconnect ? '{green-fg}✅ ON{/}' : '{red-fg}❌ OFF{/}'}`;
       } else {
         // Medium detail status
         content = `{white-fg}📡{/} {bold}{cyan-fg}${portPath}{/}{/} {white-fg}@ {/}{bold}{cyan-fg}${options.baud}{/}{/} | ${status} | {white-fg}⏱️{/} {bold}{cyan-fg}${uptimeStr}{/}{/} | {white-fg}📊{/} {bold}{cyan-fg}${messagesReceived}{/}{/} {white-fg}msgs{/} | Press ? for help
@@ -412,7 +402,7 @@ async function tuiMonitor(portPath, options) {
       width: dialogWidth,
       height: dialogHeight,
       border: { type: 'line' },
-      label: ` 💬 Send Data (${lineEnding}) `,
+      label: ` 💬 Send Data `,
       inputOnFocus: true,
       style: {
         fg: 'white',
@@ -433,14 +423,11 @@ async function tuiMonitor(portPath, options) {
     // Set up event handlers with proper cleanup
     const submitHandler = (value) => {
       if (value && port && port.isOpen && !isShuttingDown) {
-        const endings = {LF: '\n', CR: '\r', CRLF: '\r\n'};
-        const dataToSend = value + endings[lineEnding];
+        const dataToSend = value + '\n'; // Always use LF line ending
         
         try {
           port.write(dataToSend);
-          if (echoMode) {
-            addMessage(`→ ${value}`, 'blue');
-          }
+          addMessage(`→ ${value}`, 'blue');
           bytesSent += Buffer.from(dataToSend).length;
         } catch (error) {
           addMessage(`❌ Send failed: ${error.message}`, 'red');
@@ -700,13 +687,10 @@ async function tuiMonitor(portPath, options) {
 {yellow-fg}{bold}Main Controls:{/bold}{/yellow-fg}
 {white-fg}Q{/white-fg} - Exit application
 {white-fg}I{/white-fg} - Send message to serial port
-{white-fg}F{/white-fg} - Set message filter
 {white-fg}H{/white-fg} - Toggle hex viewer on/off
 {white-fg}S{/white-fg} - Toggle statistics panel
 {white-fg}P{/white-fg} or {white-fg}Space{/white-fg} - Pause/resume logging
 {white-fg}C{/white-fg} - Clear screen
-{white-fg}E{/white-fg} - Toggle echo mode
-{white-fg}L{/white-fg} - Cycle line endings (LF/CR/CRLF)
 {white-fg}R{/white-fg} - Toggle auto-reconnect
 
 {yellow-fg}{bold}Navigation:{/bold}{/yellow-fg}
@@ -718,10 +702,7 @@ async function tuiMonitor(portPath, options) {
 • Hex View: ${showHex ? '{green-fg}ON{/green-fg}' : '{red-fg}OFF{/red-fg}'}
 • Statistics: ${showStats ? '{green-fg}ON{/green-fg}' : '{red-fg}OFF{/red-fg}'}
 • Logging: ${pauseLogging ? '{red-fg}PAUSED{/red-fg}' : '{green-fg}ACTIVE{/green-fg}'}
-• Echo Mode: ${echoMode ? '{green-fg}ON{/green-fg}' : '{red-fg}OFF{/red-fg}'}
 • Auto-Reconnect: ${autoReconnect ? '{green-fg}ON{/green-fg}' : '{red-fg}OFF{/red-fg}'}
-• Line Ending: {cyan-fg}${lineEnding}{/cyan-fg}
-• Filter: ${filterEnabled ? `{yellow-fg}${filterText}{/yellow-fg}` : '{red-fg}OFF{/red-fg}'}
 
 {center}{gray-fg}Press any key to close this help{/gray-fg}{/center}`,
       tags: true,
@@ -769,11 +750,6 @@ async function tuiMonitor(portPath, options) {
       { keys: ['i', 'I'], handler: () => {
         showInputDialog();
       }},
-      
-      // Filter - F key
-      { keys: ['f', 'F'], handler: () => {
-        showFilterDialog();
-      }},
 
       // Toggle hex view - H key
       { keys: ['h', 'H'], handler: () => {
@@ -807,20 +783,6 @@ async function tuiMonitor(portPath, options) {
         }
         addMessage('🧹 Logs cleared', 'yellow');
         scheduleRender();
-      }},
-
-      // Toggle echo mode - E key
-      { keys: ['e', 'E'], handler: () => {
-        echoMode = !echoMode;
-        addMessage(`🔊 Echo mode ${echoMode ? 'enabled' : 'disabled'}`, 'yellow');
-      }},
-
-      // Cycle line endings - L key
-      { keys: ['l', 'L'], handler: () => {
-        const endings = ['LF', 'CR', 'CRLF'];
-        const currentIndex = endings.indexOf(lineEnding);
-        lineEnding = endings[(currentIndex + 1) % endings.length];
-        addMessage(`📏 Line ending changed to ${lineEnding}`, 'yellow');
       }},
 
       // Toggle auto-reconnect - R key
