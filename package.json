@@ -1,0 +1,94 @@
+{
+  "name": "serialconsole",
+  "version": "1.0.0",
+  "description": "Professional cross-platform serial port monitor with nano-style TUI interface",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "serialconsole": "./index.js",
+    "sc": "./index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "build": "pkg . --compress GZip",
+    "build:all": "pkg . --targets node18-win-x64,node18-macos-x64,node18-macos-arm64,node18-linux-x64,node18-linux-arm64 --compress GZip",
+    "test": "node index.js list",
+    "prepare": "npm run build:all",
+    "release": "npm run build:all && npm publish"
+  },
+  "pkg": {
+    "targets": [
+      "node18-win-x64",
+      "node18-macos-x64", 
+      "node18-macos-arm64",
+      "node18-linux-x64",
+      "node18-linux-arm64"
+    ],
+    "outputPath": "dist"
+  },
+  "keywords": [
+    "serial",
+    "monitor",
+    "console",
+    "cli",
+    "tui",
+    "cross-platform",
+    "serialport",
+    "terminal",
+    "embedded",
+    "arduino",
+    "esp32",
+    "uart",
+    "debugging",
+    "hex-viewer",
+    "auto-reconnect",
+    "nano-style",
+    "dashboard",
+    "rs232",
+    "com-port",
+    "serial-communication"
+  ],
+  "author": {
+    "name": "Sigmakib2",
+    "email": "your.email@example.com",
+    "url": "https://github.com/Sigmakib2"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Sigmakib2/serialconsole.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Sigmakib2/serialconsole/issues"
+  },
+  "homepage": "https://github.com/Sigmakib2/serialconsole#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": [
+    "win32",
+    "darwin", 
+    "linux"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "dependencies": {
+    "serialport": "^13.0.0",
+    "@serialport/parser-readline": "^12.0.0",
+    "chalk": "^5.4.1",
+    "commander": "^12.1.0",
+    "blessed": "^0.1.81"
+  },
+  "devDependencies": {
+    "pkg": "^5.8.1"
+  },
+  "preferGlobal": true,
+  "files": [
+    "index.js",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ]
+}
